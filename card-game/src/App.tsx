@@ -1,122 +1,131 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+// App.tsx - COMPLETO
+import { useReducer } from 'react';
+import { unoReducer } from './context/unoReducer';
+import { CartaUno } from './components/CartaUno';
+import { MesaUno } from './components/MesaUno';
+import './App.css';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [state, dispatch] = useReducer(unoReducer, {
+    jogadores: [],
+    monteCompra: [],
+    monteDescarte: [],
+    vez: 0,
+    corAtual: 'vermelho',
+    vencedor: null,
+    estado: 'preparacao'
+  });
+
+  // Iniciar jogo automaticamente
+  if (state.estado === 'preparacao') {
+    dispatch({ type: 'INICIAR_JOGO' });
+  }
+
+  const jogadorAtual = state.jogadores[state.vez];
+  const cartaTopo = state.monteDescarte[0];
+
+  const handleJogarCarta = (carta: any, jogadorIndex: number) => {
+    if (jogadorIndex === state.vez) {
+      dispatch({ type: 'JOGAR_CARTA', carta, jogadorIndex });
+    }
+  };
+
+  const handleComprarCarta = (jogadorIndex: number) => {
+    if (jogadorIndex === state.vez) {
+      dispatch({ type: 'COMPRAR_CARTA', jogadorIndex });
+    }
+  };
+
+  const podeJogarCarta = (carta: any) => {
+    return carta.cor === state.corAtual || carta.valor === cartaTopo.valor;
+  };
+
+  if (state.vencedor) {
+    return (
+      <div className="tela-vitoria">
+        <div className="vitoria-container">
+          <h1>{state.vencedor.nome} Venceu!</h1>
+          <p>Parabéns!</p>
+          <button 
+            onClick={() => dispatch({ type: 'INICIAR_JOGO' })}
+            className="btn-principal"
+          >
+            Jogar Novamente
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
+    <div className="app-uno">
+      <header className="header-uno">
+        <h1>UNO Simplificado</h1>
+        <div className="info-jogo">
+          <span>Vez: <strong>{jogadorAtual?.nome}</strong></span>
+          <span>Cor atual: <span className={`cor-${state.corAtual}`}>{state.corAtual}</span></span>
         </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+      </header>
 
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
+      <div className="area-jogo">
+        {/* Jogador 2 */}
+        <div className={`jogador-area ${state.vez === 1 ? 'jogador-ativo' : ''}`}>
+          <h2>{state.jogadores[1]?.nome}</h2>
+          <div className="mao-jogador">
+            {state.jogadores[1]?.mao.map((carta) => (
+              <CartaUno
+                key={carta.id}
+                carta={carta}
+                onClick={() => handleJogarCarta(carta, 1)}
+                jogavel={podeJogarCarta(carta) && state.vez === 1}
+              />
+            ))}
+          </div>
+          <div className="contador-cartas">
+            {state.jogadores[1]?.mao.length} cartas
+          </div>
+          {state.vez === 1 && (
+            <button onClick={() => handleComprarCarta(1)} className="btn-comprar">
+              Comprar Carta
+            </button>
+          )}
         </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+        {/* Mesa Central */}
+        <div className="mesa-central">
+          <MesaUno
+            cartaTopo={cartaTopo}
+            corAtual={state.corAtual}
+            monteCompra={state.monteCompra}
+            onComprarCarta={() => handleComprarCarta(state.vez)}
+          />
+        </div>
+
+        {/* Jogador 1 */}
+        <div className={`jogador-area ${state.vez === 0 ? 'jogador-ativo' : ''}`}>
+          <h2>{state.jogadores[0]?.nome}</h2>
+          <div className="mao-jogador">
+            {state.jogadores[0]?.mao.map((carta) => (
+              <CartaUno
+                key={carta.id}
+                carta={carta}
+                onClick={() => handleJogarCarta(carta, 0)}
+                jogavel={podeJogarCarta(carta) && state.vez === 0}
+              />
+            ))}
+          </div>
+          <div className="contador-cartas">
+            {state.jogadores[0]?.mao.length} cartas
+          </div>
+          {state.vez === 0 && (
+            <button onClick={() => handleComprarCarta(0)} className="btn-comprar">
+              Comprar Carta
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 }
 
-export default App
+export default App;
